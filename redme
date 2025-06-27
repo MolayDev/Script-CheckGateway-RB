@@ -1,0 +1,52 @@
+# Script - Monitoramento de Links + Envio SMTP
+
+# Carrega os estados anteriores
+:local prevMain $prevMainGatewayUp
+:local prevBackup $prevBackupGatewayUp
+
+# Faz o ping e verifica se está UP (true) ou DOWN (false)
+:local mainUp ([:len [/ping count=1 address=10.0.10.1]] > 0)
+:local backupUp ([:len [/ping count=1 address=192.168.1.1]] > 0)
+
+# Se houver mudança no status, monta a mensagem e envia e-mail
+:if ($mainUp != $prevMain || $backupUp != $prevBackup) do={
+    :local msg ""
+    :local subject ""
+
+    # Monta mensagens e assunto conforme a mudança
+
+    # Link Principal (FamNet)
+    :if ($mainUp != $prevMain) do={
+        :if ($mainUp) do={
+            :set msg "$msg? Link FamNet (10.0.10.1): Voltou\n"
+            :set subject "$subject[FamNet: UP] "
+        } else={
+            :set msg "$msg? Link FamNet (10.0.10.1): CAIU\n"
+            :set subject "$subject[FamNet: DOWN] "
+        }
+    }
+
+    # Link Secundário (DTEL)
+    :if ($backupUp != $prevBackup) do={
+        :if ($backupUp) do={
+            :set msg "$msg? Link DTel (192.168.1.1): Voltou\n"
+            :set subject "$subject[DTel: UP] "
+        } else={
+            :set msg "$msg? Link DTel (192.168.1.1): CAIU\n"
+            :set subject "$subject[DTel: DOWN] "
+        }
+    }
+
+    # Adiciona Rodapé à Mensagem
+    :set msg "$msg\nMensagem enviada automaticamente pelo roteador:\n" 
+    :set msg "$msg - [/system identity get name]\n"
+    :set msg "$msg - Data: [/system clock get date]\n"
+    :set msg "$msg - Hora: [/system clock get time]"
+
+    # Envia e-mail
+    /tool e-mail send to="suporte@jminformaticape.com.br" subject=$subject body=$msg
+}
+
+# Atualiza as variáveis globais com o novo Status
+:global prevMainGatewayUp $mainUp
+:global prevBackupGatewayUp $backupUp
