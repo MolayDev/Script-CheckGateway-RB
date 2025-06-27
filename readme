@@ -44,7 +44,7 @@
     :set msg "$msg - Hora: [/system clock get time]"
 
     # Envia e-mail
-    /tool e-mail send to="suporte@jminformaticape.com.br" subject=$subject body=$msg
+    /tool e-mail send to="EMAIL_PRA_RECEBER_OS_ALERTAS" subject=$subject body=$msg
 }
 
 # Atualiza as variáveis globais com o novo Status
